@@ -21,9 +21,6 @@ public class ChartService {
 
     private final TransactionRepository transactionRepository;
 
-    /**
-     * Pie chart of expenses grouped by category for a date range.
-     */
     public JFreeChart expensesByCategoryPieChart(User user, LocalDate from, LocalDate to) {
         List<Object[]> rows = transactionRepository.sumByCategory(user, TransactionType.EXPENSE, from, to);
 
@@ -41,15 +38,12 @@ public class ChartService {
         return ChartFactory.createPieChart(
                 "Expenses by category",
                 dataset,
-                true,   // legend
-                true,   // tooltips
-                false   // no URLs
+                true,
+                true,
+                false
         );
     }
 
-    /**
-     * Bar chart comparing income totals for each category.
-     */
     public JFreeChart incomeByCategoryBarChart(User user, LocalDate from, LocalDate to) {
         List<Object[]> rows = transactionRepository.sumByCategory(user, TransactionType.INCOME, from, to);
 

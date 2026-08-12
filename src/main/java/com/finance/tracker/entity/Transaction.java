@@ -27,7 +27,7 @@ public class Transaction {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private TransactionType type; // INCOME or EXPENSE
+    private TransactionType type;
 
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

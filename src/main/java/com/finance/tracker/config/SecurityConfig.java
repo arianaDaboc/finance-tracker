@@ -20,7 +20,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Public routes: authentication pages and static styles.
                         .requestMatchers("/login", "/register", "/css/**").permitAll()
                         .anyRequest().authenticated()
                 )

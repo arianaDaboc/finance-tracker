@@ -15,7 +15,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByUserOrderByDateDesc(User user);
 
-    // Returns category name and aggregate amount for one user, type, and date range.
     @Query("""
             SELECT c.name, SUM(t.amount)
             FROM Transaction t JOIN t.category c
@@ -28,7 +27,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                   @Param("from") LocalDate from,
                                   @Param("to") LocalDate to);
 
-    // Returns the aggregate amount for one transaction type and date range.
     @Query("""
             SELECT COALESCE(SUM(t.amount), 0)
             FROM Transaction t

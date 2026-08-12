@@ -31,7 +31,6 @@ public class DashboardController {
     public String dashboard(Model model, Authentication authentication) {
         User user = userService.getByUsername(authentication.getName());
 
-        // The current month is the default range for summary data and charts.
         YearMonth currentMonth = YearMonth.now();
         LocalDate from = currentMonth.atDay(1);
         LocalDate to = currentMonth.atEndOfMonth();

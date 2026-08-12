@@ -23,7 +23,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password; // Stored as a BCrypt hash, never as plain text.
+    private String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Category> categories = new ArrayList<>();

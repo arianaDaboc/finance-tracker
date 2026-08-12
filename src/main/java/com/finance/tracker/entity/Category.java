@@ -21,7 +21,7 @@ public class Category {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    private TransactionType type; // INCOME or EXPENSE
+    private TransactionType type;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
