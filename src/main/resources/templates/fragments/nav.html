@@ -1,0 +1,17 @@
+<aside class="sidebar" th:fragment="navbar" xmlns:th="http://www.thymeleaf.org">
+    <a class="brand" th:href="@{/dashboard}" aria-label="Finora - home">
+        <span class="brand-mark">F</span>
+        <span><strong>Finora</strong><small>Finance tracker</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+        <a th:href="@{/dashboard}"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+        <a th:href="@{/transactions}"><span class="nav-icon">↕</span><span>Transactions</span></a>
+        <a th:href="@{/categories}"><span class="nav-icon">▦</span><span>Categories</span></a>
+    </nav>
+    <div class="sidebar-footer">
+        <div><span class="status-dot"></span><span>Data synced locally</span></div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-button"><span>↪</span> Sign out</button>
+        </form>
+    </div>
+</aside>

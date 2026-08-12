@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dashboard - Finora</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+<div th:replace="~{fragments/nav :: navbar}"></div>
+<main class="app-shell">
+    <header class="page-header">
+        <div><p class="eyebrow">Financial overview</p><h1>Welcome back, <span th:text="${username}">user</span></h1><p>See how your finances are performing this month.</p></div>
+        <a class="btn btn-primary" th:href="@{/transactions}"><span>+</span> New transaction</a>
+    </header>
+    <section class="summary-grid" aria-label="Financial summary">
+        <article class="metric-card metric-balance"><div class="metric-top"><span>Available balance</span><span class="metric-icon">◎</span></div><strong th:text="${#numbers.formatDecimal(balance, 1, 2)} + ' RON'">0.00 RON</strong><small th:text="'Updated for ' + ${month}">Current month</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Income</span><span class="trend positive">↑ this month</span></div><strong th:text="${#numbers.formatDecimal(income, 1, 2)} + ' RON'">0.00 RON</strong><small>Total money received</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Expenses</span><span class="trend negative">↓ this month</span></div><strong th:text="${#numbers.formatDecimal(expense, 1, 2)} + ' RON'">0.00 RON</strong><small>Total money spent</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Activity</span><span class="metric-icon muted">↕</span></div><strong th:text="${transactionCount}">0</strong><small>Recorded transactions</small></article>
+    </section>
+    <section class="dashboard-grid">
+        <article class="panel chart-panel"><div class="section-heading"><div><p class="eyebrow">Distribution</p><h2>Expenses by category</h2></div><span class="period-chip">Current month</span></div><img th:src="@{/chart/expenses-by-category}" alt="Expenses by category chart"></article>
+        <article class="panel chart-panel"><div class="section-heading"><div><p class="eyebrow">Comparison</p><h2>Income by category</h2></div><span class="period-chip">Current month</span></div><img th:src="@{/chart/income-by-category}" alt="Income by category chart"></article>
+    </section>
+    <section class="panel recent-panel">
+        <div class="section-heading"><div><p class="eyebrow">Activity</p><h2>Recent transactions</h2></div><a class="text-link" th:href="@{/transactions}">View all →</a></div>
+        <div class="transaction-list">
+            <div class="transaction-row" th:each="t : ${recentTransactions}">
+                <span class="transaction-avatar" th:classappend="${t.type.name() == 'INCOME'} ? ' avatar-income' : ' avatar-expense'" th:text="${#strings.substring(t.category.name,0,1)}">C</span>
+                <div class="transaction-main"><strong th:text="${t.description != null && !t.description.isBlank() ? t.description : t.category.name}">Transaction</strong><small th:text="${t.category.name} + ' · ' + ${#temporals.format(t.date, 'dd MMM yyyy')}">Category</small></div>
+                <strong class="transaction-amount" th:classappend="${t.type.name() == 'INCOME'} ? ' amount-income' : ' amount-expense'" th:text="${t.type.name() == 'INCOME' ? '+' : '-'} + ${#numbers.formatDecimal(t.amount, 1, 2)} + ' RON'">0 RON</strong>
+            </div>
+            <div class="empty-state" th:if="${#lists.isEmpty(recentTransactions)}"><span>↕</span><strong>No transactions yet</strong><p>Add your first transaction to see your activity here.</p><a class="btn btn-primary" th:href="@{/transactions}">Add transaction</a></div>
+        </div>
+    </section>
+</main>
+</body></html>

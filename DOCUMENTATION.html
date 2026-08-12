@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><title>Finora Technical Documentation</title><style>@page{size:A4;margin:12mm 13mm 14mm;@bottom-right{content:"Page " counter(page);font:8px Arial;color:#718078}}*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:#17211b;font-size:8.6pt;line-height:1.34}.cover{height:271mm;background:#173e2b;color:#fff;margin:-12mm -13mm -14mm;padding:53mm 23mm;page-break-after:always;position:relative}.mark{width:18mm;height:18mm;display:grid;place-items:center;background:#57c68a;color:#102218;border-radius:3mm;font-size:26pt;font-weight:800}.kicker{margin-top:28mm;color:#7bd5a4;font-weight:800;letter-spacing:2px}.cover h1{font-size:34pt;line-height:1.1;margin:4mm 0}.edition{font-size:14pt;color:#c8dbcf}.meta{position:absolute;bottom:24mm;color:#9fbaaa}main{max-width:184mm;margin:auto}h2{font-size:15pt;color:#173e2b;border-bottom:1.5px solid #57c68a;padding-bottom:1mm;margin:5mm 0 2mm;page-break-after:avoid}h3{font-size:10.5pt;color:#176944;margin:3mm 0 1mm;page-break-after:avoid}p{margin:1.3mm 0}ul{margin:1mm 0 2mm;padding-left:6mm}li{margin:.5mm 0}code{font-family:Consolas,monospace;background:#edf3ef;color:#0f5e3a;padding:.2mm .7mm;font-size:7.8pt}pre{background:#18251e;color:#eaf4ed;padding:2.5mm 3mm;border-radius:1.5mm;white-space:pre-wrap;page-break-inside:avoid;font-size:7.1pt;line-height:1.16;margin:2mm 0}pre code{background:none;color:inherit;padding:0}table{width:100%;border-collapse:collapse;margin:2mm 0 3mm;font-size:7.8pt;page-break-inside:avoid}td{border:1px solid #dbe4de;padding:1.2mm 1.7mm;vertical-align:top}tr:first-child td{background:#e9f3ed;font-weight:700}tr:nth-child(even) td{background:#f8faf8}</style></head><body><header class='cover'><div class='mark'>F</div><p class='kicker'>TECHNICAL DOCUMENTATION</p><h1>Finora Finance Tracker</h1><p class='edition'>Architecture, domain model, workflows, analytics, and security</p><div class='meta'>Spring Boot 3.3.2 | Java 17 | 2026</div></header><main>
+<h2>System Overview</h2>
+<p>Finora is a server-rendered personal finance application for recording income and expenses, organizing transactions into categories, and analyzing the current month&#39;s financial position. Each account owns an isolated set of categories and transactions.</p>
+<p>The browser receives complete HTML pages and PNG charts from one Spring Boot application. Business calculations, authorization, database access, page rendering, and chart generation are performed on the server. This design keeps the client lightweight and places financial rules inside the Java application.</p>
+<table><tbody>
+<tr><td>Component</td><td>Technology</td><td>Responsibility</td></tr>
+<tr><td>Runtime</td><td>Java 17 and Spring Boot 3.3.2</td><td>Application composition</td></tr>
+<tr><td>Web</td><td>Spring MVC and Thymeleaf</td><td>Requests, forms, and HTML rendering</td></tr>
+<tr><td>Security</td><td>Spring Security and BCrypt</td><td>Sessions, access control, password hashing</td></tr>
+<tr><td>Persistence</td><td>Spring Data JPA and Hibernate</td><td>Entity mapping and queries</td></tr>
+<tr><td>Database</td><td>PostgreSQL</td><td>Durable relational storage</td></tr>
+<tr><td>Analytics</td><td>JFreeChart</td><td>Server-generated PNG charts</td></tr>
+</tbody></table>
+<h2>Architecture</h2>
+<p>Finora follows a layered controller-service-repository architecture.</p>
+<pre><code>
++------------------+        HTTP         +------------------+
+| Browser          | &lt;-----------------&gt; | MVC Controllers  |
+| HTML forms / PNG |                     +--------+---------+
++------------------+                              |
+                                                  v
+                                         +--------+---------+
+                                         | Services         |
+                                         | rules + security |
+                                         +--------+---------+
+                                                  |
+                                                  v
+                                         +--------+---------+
+                                         | Repositories     |
+                                         | JPA queries      |
+                                         +--------+---------+
+                                                  |
+                                                  v
+                                         +------------------+
+                                         | PostgreSQL       |
+                                         +------------------+
+</code></pre>
+<p>Controllers coordinate web use cases. They bind form data, obtain the authenticated identity, call services, and prepare Thymeleaf models. Services implement registration, ownership validation, aggregation, persistence coordination, and chart creation. Repositories provide entity operations and execute aggregate JPQL queries in PostgreSQL. Thymeleaf templates present the prepared model without owning business rules.</p>
+<p><code>AuthController</code> handles registration pages. <code>DashboardController</code> prepares monthly totals and recent activity. <code>TransactionController</code> and <code>CategoryController</code> coordinate record management. <code>ChartController</code> returns authenticated image responses.</p>
+<h2>Domain Model</h2>
+<pre><code>
++-------------+       1       * +-------------+
+| USER        |-----------------| CATEGORY    |
+|-------------|                 |-------------|
+| id          |                 | id          |
+| username    |                 | name        |
+| password    |                 | type        |
++------+------+                 | user_id     |
+       |                        +------+------+ 
+       | 1                             | 1
+       |                               |
+       | *                             | *
++------+-------------------------------+------+
+| TRANSACTION                                 |
+|---------------------------------------------|
+| id | amount | type | date | description     |
+| user_id | category_id                       |
++---------------------------------------------+
+</code></pre>
+<p><code>User</code> is both an authentication identity and the ownership boundary. Its password field stores a BCrypt hash rather than the submitted password. Username uniqueness prevents ambiguous identities.</p>
+<p><code>Category</code> classifies money as <code>INCOME</code> or <code>EXPENSE</code> and belongs to one user. Categories allow transaction totals to be grouped into meaningful financial areas such as salary, housing, food, or transport.</p>
+<p><code>Transaction</code> stores a positive <code>BigDecimal</code> amount, type, <code>LocalDate</code>, optional description, selected category, and owner. <code>BigDecimal</code> avoids the rounding errors associated with binary floating-point currency calculations. Transaction types are persisted as text, keeping database values independent of enumeration order.</p>
+<h2>Core Workflows</h2>
+<h3>Identity and Session</h3>
+<pre><code>
+Registration -&gt; uniqueness check -&gt; BCrypt hash -&gt; user persistence
+Sign in      -&gt; user lookup -&gt; hash comparison -&gt; authenticated session
+Request      -&gt; session identity -&gt; domain user -&gt; protected operation
+</code></pre>
+<p>Spring Security delegates user lookup to <code>UserService</code>. After authentication, the identity is maintained in an HTTP session. Private controllers receive an <code>Authentication</code> object and resolve the corresponding domain user before accessing financial data.</p>
+<h3>Category and Transaction Processing</h3>
+<p>Category creation binds submitted fields to a new entity, assigns the authenticated user as owner, and persists it through <code>CategoryService</code>. Category lists are queried for that user only.</p>
+<p>Transaction creation follows the same ownership pattern:</p>
+<pre><code>
+Form submission
+      -&gt; Spring MVC binds amount, type, category, date, description
+      -&gt; controller resolves authenticated user
+      -&gt; user is assigned as transaction owner
+      -&gt; service persists through TransactionRepository
+      -&gt; redirect reloads the transaction history
+</code></pre>
+<p>Records are listed in descending date order. Creation and deletion use <code>POST</code>, followed by a redirect. This redirect-after-post pattern prevents duplicate submissions when a page is refreshed.</p>
+<p>For deletion, the service loads the requested record and compares its owner identifier with the authenticated user&#39;s identifier. A mismatch causes rejection. This second authorization layer protects against manually constructed requests, even though normal list queries already hide records belonging to other users.</p>
+<h2>Financial Processing</h2>
+<p>The dashboard derives an inclusive range from the current <code>YearMonth</code>: the first and last calendar day. PostgreSQL calculates aggregates for the authenticated user and date range.</p>
+<pre><code>
+monthly income  = SUM(amount WHERE type = INCOME)
+monthly expense = SUM(amount WHERE type = EXPENSE)
+balance         = monthly income - monthly expense
+</code></pre>
+<p>Aggregate queries use <code>COALESCE</code> so an empty result becomes zero rather than null. The transaction list supplies the activity count, while its first five date-ordered elements become the recent activity feed.</p>
+<p>Category analytics are also calculated in PostgreSQL. Transactions are filtered by owner, type, and date range, grouped by category name, summed, and ordered by total amount. Database-side aggregation avoids loading an entire month into application memory solely to calculate totals.</p>
+<h2>Chart Pipeline</h2>
+<pre><code>
+Chart request
+   -&gt; authenticated user and current month
+   -&gt; grouped repository query
+   -&gt; category name + aggregate amount
+   -&gt; JFreeChart dataset
+   -&gt; pie chart or vertical bar chart
+   -&gt; ChartUtils encodes PNG
+   -&gt; browser displays image
+</code></pre>
+<p>The expense chart uses a pie dataset to show each category&#39;s share of monthly spending. A placeholder dataset guarantees a valid image when no expenses exist. The income chart uses vertical bars to compare totals across income categories.</p>
+<p>Charts are regular <code>image/png</code> responses. They require no browser chart library and remain behind the same authentication policy as financial pages.</p>
+<h2>Security Model</h2>
+<p>Security is applied at several levels:</p>
+<ul>
+<li>Spring Security permits only authentication pages and static styles without a session.</li>
+<li>BCrypt salts and hashes passwords before storage.</li>
+<li>CSRF protection applies to state-changing forms.</li>
+<li>repository methods scope lists and aggregates to the authenticated user;</li>
+<li>service methods independently verify ownership before deletion;</li>
+<li>JPA parameter binding avoids concatenating user values into query text;</li>
+<li>logout invalidates the active authentication context.</li>
+</ul>
+<p>This defense-in-depth model separates authentication, query filtering, and operation authorization. Hiding a record in the interface is never treated as sufficient protection.</p>
+<h2>Interface and Extension Model</h2>
+<p>The interface uses a stable workspace layout: sidebar navigation, financial metric panels, responsive forms, history tables, category lists, empty states, and separate authentication screens. Green communicates income or positive state; red communicates expense or destructive action. Responsive breakpoints reorganize navigation, grids, forms, and tables for smaller screens.</p>
+<p>The current scope is a personal ledger, not a complete accounting platform. It does not model bank accounts, transfers, recurring entries, budgets, shared households, multiple currencies, attachments, or audit history. The layered structure supports these extensions through new entities, repository queries, service rules, controller use cases, and matching views while preserving the central invariant: every financial operation belongs to and is authorized for one authenticated user.</p>
+</main>
+</body></html>
