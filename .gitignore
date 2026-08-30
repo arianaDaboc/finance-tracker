@@ -3,5 +3,7 @@ target/
 *.iml
 *.log
 .env
+src/main/java/**/*.sql
+financial_tracker_video.mp4
 .DS_Store
 Thumbs.db

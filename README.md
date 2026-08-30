@@ -4,6 +4,15 @@
 
 Finora is a server-rendered personal finance application for recording income and expenses, organizing transactions into categories, and analyzing the current month's financial position. Each account owns an isolated set of categories and transactions.
 
+## Version 2.0.0
+
+This release introduces a complete visual redesign built around an editorial personal-ledger concept. The former sidebar dashboard has been replaced by a compact horizontal workspace, a warm paper-like canvas, cobalt navigation and actions, sharper financial panels, and responsive layouts for authentication, overview, transaction, and category screens.
+
+- [GitHub release v2.0.0](https://github.com/arianaDaboc/finance-tracker/releases/tag/v2.0.0)
+- [Download the application walkthrough video](https://github.com/arianaDaboc/finance-tracker/releases/download/v2.0.0/financial_tracker_video.mp4)
+
+The walkthrough video is distributed as a GitHub Release asset rather than committed to the source tree.
+
 The browser receives complete HTML pages and PNG charts from one Spring Boot application. Business calculations, authorization, database access, page rendering, and chart generation are performed on the server. This design keeps the client lightweight and places financial rules inside the Java application.
 
 | Component | Technology | Responsibility |
@@ -152,6 +161,6 @@ This defense-in-depth model separates authentication, query filtering, and opera
 
 ## Interface and Extension Model
 
-The interface uses a stable workspace layout: sidebar navigation, financial metric panels, responsive forms, history tables, category lists, empty states, and separate authentication screens. Green communicates income or positive state; red communicates expense or destructive action. Responsive breakpoints reorganize navigation, grids, forms, and tables for smaller screens.
+The version 2 interface uses an editorial ledger layout with horizontal navigation, a warm paper-like background, high-contrast cobalt actions, serif display typography, financial metric panels, responsive forms, history tables, category lists, empty states, and separate authentication compositions. Green communicates income or positive state; coral communicates expense or destructive action. Responsive breakpoints reorganize navigation, grids, forms, tables, and authentication content for smaller screens.
 
 The current scope is a personal ledger, not a complete accounting platform. It does not model bank accounts, transfers, recurring entries, budgets, shared households, multiple currencies, attachments, or audit history. The layered structure supports these extensions through new entities, repository queries, service rules, controller use cases, and matching views while preserving the central invariant: every financial operation belongs to and is authorized for one authenticated user.
