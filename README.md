@@ -18,7 +18,4 @@ Java 17, Spring Boot 3.3.2, Spring Security, Thymeleaf, PostgreSQL, Hibernate, a
 ## Demo and documentation
 
 - [Watch the application video](https://arianadaboc.github.io/finance-tracker/demo.html)
-- [Download the video from GitHub Releases](https://github.com/arianaDaboc/finance-tracker/releases/download/v2.0.0/financial_tracker_video.mp4)
-- [Finora v2.0.0 release](https://github.com/arianaDaboc/finance-tracker/releases/tag/v2.0.0)
 - [Technical documentation](DOCUMENTATION.html)
-- [Technical documentation PDF](Finora-Technical-Documentation.pdf)
