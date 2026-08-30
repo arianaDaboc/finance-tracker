@@ -29,7 +29,8 @@ mvn spring-boot:run
 
 ## Demo and documentation
 
-- [Watch or download the application video](https://github.com/arianaDaboc/finance-tracker/releases/download/v2.0.0/financial_tracker_video.mp4)
+- [Watch the application video](https://arianadaboc.github.io/finance-tracker/demo.html)
+- [Download the video from GitHub Releases](https://github.com/arianaDaboc/finance-tracker/releases/download/v2.0.0/financial_tracker_video.mp4)
 - [Finora v2.0.0 release](https://github.com/arianaDaboc/finance-tracker/releases/tag/v2.0.0)
 - [Technical documentation](DOCUMENTATION.html)
 - [Technical documentation PDF](Finora-Technical-Documentation.pdf)
