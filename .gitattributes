@@ -1,0 +1,3 @@
+# Documentation and the demo page are not application code
+DOCUMENTATION.html linguist-documentation
+docs/** linguist-documentation
